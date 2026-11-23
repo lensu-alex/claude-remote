@@ -9,7 +9,6 @@ import type { Conversation } from "@/lib/types";
 import { useDevices, useOnWake } from "@/components/Providers";
 import { LaptopCard } from "@/components/LaptopCard";
 import { PushNudge } from "@/components/PushNudge";
-import { Ticker } from "@/components/Ticker";
 import { Screen, TabBar, TopBar } from "@/components/Chrome";
 import { CheckCircle, ChevronRight, Clock, ExclamationFill } from "@/components/Icons";
 
@@ -166,8 +165,7 @@ export default function HomePage() {
   return (
     <Screen>
       <RestoreScroll />
-      <TopBar title="Tasks" large titleAt={80} />
-      <Ticker running={runningCount} waiting={waitingCount} />
+      <TopBar title="Tasks" large />
 
       <main className="content content-tabbed">
         <h1 className="large-title">Tasks</h1>

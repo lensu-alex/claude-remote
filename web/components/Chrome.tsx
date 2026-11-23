@@ -53,17 +53,14 @@ export function TopBar({
   left,
   right,
   large = false,
-  titleAt = 46,
 }: {
   title: string;
   subtitle?: string;
   left?: ReactNode;
   right?: ReactNode;
   large?: boolean;
-  /** How far the page scrolls before its large title is gone: more when something sits above it. */
-  titleAt?: number;
 }) {
-  const scrolled = useScrolled(titleAt);
+  const scrolled = useScrolled(46);
   const shown = !large || scrolled;
   return (
     <header className={large ? (scrolled ? "topbar topbar-large is-scrolled" : "topbar topbar-large") : "topbar"}>

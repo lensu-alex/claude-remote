@@ -2,8 +2,8 @@
  * Claude Remote: the "roast" look.
  *
  * Built on the iOS 26 structure it had before, restyled after a festival app: a flat ground,
- * heavy upper-case titles, small spaced-out labels in the accent colour, a band of running text
- * across the top, and thin rules between sections. The colours are coffee ones: cream and white
+ * heavy upper-case titles, small spaced-out labels in the accent colour, and thin rules between
+ * sections. The colours are coffee ones: cream and white
  * with espresso ink in the light, espresso with cream ink and a caramel accent in the dark.
  *
  * Two layers, as in Apple's Materials guidance:
@@ -50,10 +50,6 @@
   --iris-1: #6b3f20;
   --iris-2: #a8713f;
   --iris-3: #d6ac7e;
-  /* The band of running text: the strongest thing on the screen, ink on light and crema on ink. */
-  --band: #2a1a0f;
-  --on-band: #f6ead9;
-  --band-mark: #d2a171;
   --knob: #fffdf9;
   --dim: rgba(40, 24, 10, 0.3);
 
@@ -104,7 +100,6 @@
   --hairline: 0.5px;
   --bar: 52px; /* height of the row of floating buttons at the top */
   --tabbar: 62px;
-  --ticker: 34px; /* height of the band of running text */
   --spring: cubic-bezier(0.2, 0.8, 0.2, 1);
   /* Motion: things arrive and leave on --ease-out; sheets and screens move on the steeper iOS curve. */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -145,9 +140,6 @@
     --iris-1: #a8713f;
     --iris-2: #d7a874;
     --iris-3: #f3dcbd;
-    --band: #dcae7b;
-    --on-band: #1d1108;
-    --band-mark: #6b3f20;
     --knob: #fffaf2;
     --dim: rgba(6, 3, 0, 0.6);
 
@@ -437,57 +429,6 @@ a.glass,
   font: var(--micro);
   letter-spacing: var(--micro-track);
   text-transform: uppercase;
-}
-
-/*
- * The band of running text across the top of Tasks: what the laptop is doing, at a glance.
- * Two copies of the same line sit side by side and slide left by one copy, so it never ends.
- */
-.ticker {
-  overflow: hidden;
-  padding-top: var(--safe-top);
-  background: var(--band);
-  color: var(--on-band);
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-.ticker-track {
-  width: max-content;
-  height: var(--ticker);
-  display: flex;
-  animation: ticker var(--ticker-time, 30s) linear infinite;
-}
-
-.ticker-line {
-  flex: none;
-  display: flex;
-  align-items: center;
-}
-
-.ticker-item {
-  display: flex;
-  align-items: center;
-  font: 800 12px/16px var(--font-display);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.ticker-item svg {
-  margin: 0 9px;
-  color: var(--band-mark);
-}
-
-@keyframes ticker {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-/* Below the band, the screen has already cleared the status bar. */
-.ticker + .content {
-  padding-top: 26px;
 }
 
 /* Top bar: no background of its own. Content fades out beneath it. */
