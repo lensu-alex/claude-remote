@@ -29,7 +29,7 @@
   --bg-clear: rgba(246, 241, 233, 0);
   --bg-veil: rgba(246, 241, 233, 0.72);
   --bg-bar: rgba(246, 241, 233, 0.95);
-  --cell: rgba(255, 253, 249, 0.5); /* panels are see-through */
+  --cell: rgba(255, 253, 249, 0.3); /* panels are see-through */
   --cell-solid: #fffaf3; /* where a panel colour has to cover something */
   --cell-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --glow-1: rgba(214, 160, 104, 0.42);
@@ -58,9 +58,9 @@
   --dim: rgba(40, 24, 10, 0.3);
 
   /* Glass: one recipe, three inputs (fill, edge light, shadow) */
-  --glass-fill: rgba(255, 252, 246, 0.42);
-  --glass-fill-thick: rgba(253, 249, 243, 0.8);
-  --glass-fill-tint: rgba(122, 73, 38, 0.78);
+  --glass-fill: rgba(255, 252, 246, 0.26);
+  --glass-fill-thick: rgba(253, 249, 243, 0.86);
+  --glass-fill-tint: rgba(122, 73, 38, 0.64);
   --glass-solid: #fcf8f1;
   --glass-select: rgba(125, 84, 48, 0.13);
   --glass-light:
@@ -124,7 +124,7 @@
     --bg-clear: rgba(19, 12, 7, 0);
     --bg-veil: rgba(19, 12, 7, 0.66);
     --bg-bar: rgba(19, 12, 7, 0.95);
-    --cell: rgba(58, 38, 24, 0.42);
+    --cell: rgba(58, 38, 24, 0.26);
     --cell-solid: #23170f;
     --cell-edge: inset 0 1px 0 rgba(255, 236, 214, 0.08);
     --glow-1: rgba(190, 124, 64, 0.32);
@@ -151,9 +151,9 @@
     --knob: #fffaf2;
     --dim: rgba(6, 3, 0, 0.6);
 
-    --glass-fill: rgba(84, 60, 40, 0.34);
-    --glass-fill-thick: rgba(38, 26, 17, 0.82);
-    --glass-fill-tint: rgba(215, 168, 116, 0.8);
+    --glass-fill: rgba(84, 60, 40, 0.22);
+    --glass-fill-thick: rgba(38, 26, 17, 0.86);
+    --glass-fill-tint: rgba(215, 168, 116, 0.66);
     --glass-solid: #2a1d13;
     --glass-select: rgba(240, 214, 184, 0.16);
     --glass-light:
@@ -302,6 +302,8 @@ textarea:focus-visible {
 .sheet,
 .menu {
   --glass-fill: var(--glass-fill-thick);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  backdrop-filter: blur(40px) saturate(160%);
 }
 
 /* Pressing glass: it gives slightly and catches more light. */
@@ -431,8 +433,29 @@ a.glass,
   position: absolute;
 }
 
-/* Content panels: frosted, so text on them stays easy to read over the light behind. */
-.group,
+/*
+ * Content panels: frosted, so text on them stays easy to read over the light behind.
+ * A group can hold a sheet, and a blur on the group itself would pin that sheet inside it,
+ * so a group is frosted through a layer underneath its contents instead. That layer sits at the
+ * bottom of the screen's own stacking (the screen isolates), just above the light behind it.
+ */
+.group::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--cell);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  pointer-events: none;
+}
+
+/* Inside a sheet the sheet is the bottom layer, so a group there keeps its frosting on top of it. */
+.sheet .group {
+  isolation: isolate;
+}
+
 .steps,
 .code-wrap,
 .table-scroll,
@@ -646,8 +669,8 @@ a.glass,
 /* ------------------------------------------------------------------------- */
 
 .group {
+  position: relative;
   margin: 0 0 var(--gap);
-  background: var(--cell);
   border-radius: var(--r-group);
   box-shadow: var(--cell-edge), inset 0 0 0 1px var(--frame);
   overflow: hidden;
@@ -871,7 +894,7 @@ a.glass,
 }
 
 .button-tint {
-  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
+  background: color-mix(in srgb, var(--tint-fill) 68%, transparent);
   color: var(--on-tint);
 }
 
@@ -1399,7 +1422,7 @@ html.chat-open body {
 .bubble {
   padding: 8px 14px;
   border-radius: var(--r-chat);
-  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
+  background: color-mix(in srgb, var(--tint-fill) 68%, transparent);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   color: var(--on-tint);
@@ -2190,7 +2213,7 @@ html.chat-open body {
 }
 
 .chip.is-on {
-  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
+  background: color-mix(in srgb, var(--tint-fill) 68%, transparent);
   color: var(--on-tint);
 }
 
