@@ -3,7 +3,7 @@
  *
  * Built on the iOS 26 structure it had before, restyled after a festival app: a flat ground,
  * heavy upper-case titles, small spaced-out labels in the accent colour, and thin rules between
- * sections. The colours are coffee ones: cream and white
+ * sections. Panels and buttons are see-through, over soft patches of warm light behind the screen. The colours are coffee ones: cream and white
  * with espresso ink in the light, espresso with cream ink and a caramel accent in the dark.
  *
  * Two layers, as in Apple's Materials guidance:
@@ -29,7 +29,11 @@
   --bg-clear: rgba(246, 241, 233, 0);
   --bg-veil: rgba(246, 241, 233, 0.72);
   --bg-bar: rgba(246, 241, 233, 0.95);
-  --cell: #fffdf9;
+  --cell: rgba(255, 253, 249, 0.5); /* panels are see-through */
+  --cell-solid: #fffaf3; /* where a panel colour has to cover something */
+  --cell-edge: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --glow-1: rgba(214, 160, 104, 0.42);
+  --glow-2: rgba(150, 96, 58, 0.22);
   --label: #24160d;
   --label-2: rgba(66, 42, 24, 0.68);
   --label-3: rgba(66, 42, 24, 0.34);
@@ -54,9 +58,9 @@
   --dim: rgba(40, 24, 10, 0.3);
 
   /* Glass: one recipe, three inputs (fill, edge light, shadow) */
-  --glass-fill: rgba(255, 252, 246, 0.58);
-  --glass-fill-thick: rgba(253, 249, 243, 0.95);
-  --glass-fill-tint: rgba(122, 73, 38, 0.92);
+  --glass-fill: rgba(255, 252, 246, 0.42);
+  --glass-fill-thick: rgba(253, 249, 243, 0.8);
+  --glass-fill-tint: rgba(122, 73, 38, 0.78);
   --glass-solid: #fcf8f1;
   --glass-select: rgba(125, 84, 48, 0.13);
   --glass-light:
@@ -120,7 +124,11 @@
     --bg-clear: rgba(19, 12, 7, 0);
     --bg-veil: rgba(19, 12, 7, 0.66);
     --bg-bar: rgba(19, 12, 7, 0.95);
-    --cell: #1e140d;
+    --cell: rgba(58, 38, 24, 0.42);
+    --cell-solid: #23170f;
+    --cell-edge: inset 0 1px 0 rgba(255, 236, 214, 0.08);
+    --glow-1: rgba(190, 124, 64, 0.32);
+    --glow-2: rgba(120, 70, 34, 0.3);
     --label: #f7efe4;
     --label-2: rgba(240, 222, 200, 0.64);
     --label-3: rgba(240, 222, 200, 0.32);
@@ -143,9 +151,9 @@
     --knob: #fffaf2;
     --dim: rgba(6, 3, 0, 0.6);
 
-    --glass-fill: rgba(84, 60, 40, 0.42);
-    --glass-fill-thick: rgba(38, 26, 17, 0.95);
-    --glass-fill-tint: rgba(215, 168, 116, 0.94);
+    --glass-fill: rgba(84, 60, 40, 0.34);
+    --glass-fill-thick: rgba(38, 26, 17, 0.82);
+    --glass-fill-tint: rgba(215, 168, 116, 0.8);
     --glass-solid: #2a1d13;
     --glass-select: rgba(240, 214, 184, 0.16);
     --glass-light:
@@ -324,6 +332,9 @@ a.glass,
 }
 
 @media (prefers-reduced-transparency: reduce) {
+  :root {
+    --cell: var(--cell-solid);
+  }
   .glass {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
@@ -390,6 +401,46 @@ a.glass,
 .screen {
   min-height: 100dvh;
   background: var(--bg);
+}
+
+/*
+ * Soft patches of warm light behind every screen, so the see-through panels have something to show.
+ * Fixed, so the panels pass over them as the page scrolls.
+ */
+.screen,
+.chat,
+.center-screen {
+  isolation: isolate;
+}
+
+.screen::before,
+.chat::before,
+.center-screen::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 42% at 100% 8%, var(--glow-1), transparent 70%),
+    radial-gradient(64% 38% at 0% 52%, var(--glow-2), transparent 70%),
+    radial-gradient(60% 36% at 90% 96%, var(--glow-1), transparent 70%);
+}
+
+.chat::before {
+  position: absolute;
+}
+
+/* Content panels: frosted, so text on them stays easy to read over the light behind. */
+.group,
+.steps,
+.code-wrap,
+.table-scroll,
+.callout,
+.file,
+.file-image {
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
 }
 
 .content {
@@ -583,7 +634,7 @@ a.glass,
 }
 
 .fab.glass-tint {
-  background: var(--tint-fill);
+  background: var(--glass-fill-tint);
   box-shadow:
     var(--glass-light),
     var(--glass-shadow),
@@ -598,7 +649,7 @@ a.glass,
   margin: 0 0 var(--gap);
   background: var(--cell);
   border-radius: var(--r-group);
-  box-shadow: inset 0 0 0 1px var(--frame);
+  box-shadow: var(--cell-edge), inset 0 0 0 1px var(--frame);
   overflow: hidden;
 }
 
@@ -820,7 +871,7 @@ a.glass,
 }
 
 .button-tint {
-  background: var(--tint-fill);
+  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
   color: var(--on-tint);
 }
 
@@ -1116,7 +1167,7 @@ a.glass,
   width: 18px;
   height: 16px;
   margin-left: -9px;
-  background: var(--cell);
+  background: var(--cell-solid);
 }
 
 .gauge-label {
@@ -1348,7 +1399,9 @@ html.chat-open body {
 .bubble {
   padding: 8px 14px;
   border-radius: var(--r-chat);
-  background: var(--tint-fill);
+  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   color: var(--on-tint);
   font: var(--body);
   white-space: pre-wrap;
@@ -1503,7 +1556,7 @@ html.chat-open body {
   height: 44px;
   display: grid;
   place-items: center;
-  background: var(--cell);
+  background: var(--cell-solid);
   color: var(--label-2);
 }
 
@@ -2137,7 +2190,7 @@ html.chat-open body {
 }
 
 .chip.is-on {
-  background: var(--tint-fill);
+  background: color-mix(in srgb, var(--tint-fill) 82%, transparent);
   color: var(--on-tint);
 }
 
