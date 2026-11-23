@@ -1,0 +1,20 @@
+{
+  "name": "claude-remote-helper",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runs on the laptop: picks up tasks sent from the phone and runs them with Claude Code.",
+  "type": "module",
+  "bin": {
+    "remote": "bin/remote.js"
+  },
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
+    "web-push": "^4.0.0"
+  }
+}

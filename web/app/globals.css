@@ -1,0 +1,2677 @@
+/*
+ * Claude Remote: the "roast" look.
+ *
+ * Built on the iOS 26 structure it had before, restyled after a festival app: a flat ground,
+ * heavy upper-case titles, small spaced-out labels in the accent colour, a band of running text
+ * across the top, and thin rules between sections. The colours are coffee ones: cream and white
+ * with espresso ink in the light, espresso with cream ink and a caramel accent in the dark.
+ *
+ * Two layers, as in Apple's Materials guidance:
+ *   content  - framed, opaque panels (grouped cells, messages, forms)
+ *   controls - glass, floating above the content (bars, composer, sheets, menus)
+ * Content is never glass and glass never sits on glass.
+ *
+ * Everything below is built from the tokens in :root. Three type voices, each with one job:
+ *   --font          the system font, for anything read as a sentence
+ *   --font-display  heavy geometric capitals, for titles, numbers, labels and button names
+ *   --font-mono     code, commands and paths
+ */
+
+/* ------------------------------------------------------------------------- */
+/* Tokens                                                                     */
+/* ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* System colours, light */
+  --bg: #f6f1e9;
+  --bg-clear: rgba(246, 241, 233, 0);
+  --bg-veil: rgba(246, 241, 233, 0.72);
+  --bg-bar: rgba(246, 241, 233, 0.95);
+  --cell: #fffdf9;
+  --label: #24160d;
+  --label-2: rgba(66, 42, 24, 0.68);
+  --label-3: rgba(66, 42, 24, 0.34);
+  --separator: rgba(112, 72, 38, 0.2);
+  --fill: rgba(125, 84, 48, 0.09);
+  --fill-2: rgba(125, 84, 48, 0.17);
+  --tint: #87532b;
+  --green: #4c8748;
+  --orange: #bf6d17;
+  --red: #b93a2a;
+  --gray: #9a8d81;
+  --on-tint: #fff8ee;
+  --tint-fill: #7a4926; /* behind --on-tint text; --tint is for text and glyphs */
+  --tint-fill-2: #96603a;
+  --frame: rgba(112, 72, 38, 0.18); /* the hairline around every panel */
+  --rule: rgba(135, 83, 43, 0.38); /* the short rule above a section */
+  /* The usage rings run from roast to crema. */
+  --iris-1: #6b3f20;
+  --iris-2: #a8713f;
+  --iris-3: #d6ac7e;
+  /* The band of running text: the strongest thing on the screen, ink on light and crema on ink. */
+  --band: #2a1a0f;
+  --on-band: #f6ead9;
+  --band-mark: #d2a171;
+  --knob: #fffdf9;
+  --dim: rgba(40, 24, 10, 0.3);
+
+  /* Glass: one recipe, three inputs (fill, edge light, shadow) */
+  --glass-fill: rgba(255, 252, 246, 0.58);
+  --glass-fill-thick: rgba(253, 249, 243, 0.95);
+  --glass-fill-tint: rgba(122, 73, 38, 0.92);
+  --glass-solid: #fcf8f1;
+  --glass-select: rgba(125, 84, 48, 0.13);
+  --glass-light:
+    inset 0 1px 0 0 rgba(255, 255, 255, 1), inset 0 0 0 0.5px rgba(255, 255, 255, 0.8),
+    inset 0 7px 9px -7px rgba(255, 255, 255, 0.9), inset 0 -9px 10px -9px rgba(60, 30, 0, 0.09);
+  --glass-light-tint:
+    inset 0 1px 0 0 rgba(255, 240, 220, 0.45), inset 0 0 0 0.5px rgba(255, 240, 220, 0.2),
+    inset 0 7px 9px -7px rgba(255, 240, 220, 0.32), inset 0 -9px 10px -9px rgba(0, 0, 0, 0.25);
+  --glass-shadow: 0 0 0 0.5px rgba(90, 56, 26, 0.14), 0 1px 3px rgba(70, 40, 14, 0.08), 0 10px 28px rgba(90, 56, 26, 0.16);
+
+  /* Type: the iOS text styles, as size/line-height */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --font-display: var(--font-heavy), "Avenir Next", var(--font);
+  --micro: 700 10.5px/14px var(--font-display); /* with text-transform: uppercase and --micro-track */
+  --micro-track: 0.11em;
+  --button-label: 800 13px/18px var(--font-display); /* names of buttons, upper-case, --button-track */
+  --button-track: 0.09em;
+  --large-title: 900 36px/38px var(--font-display);
+  --title: 700 22px/28px var(--font);
+  --section: 800 21px/26px var(--font-display);
+  --headline: 600 17px/22px var(--font);
+  --body: 400 17px/22px var(--font);
+  --subheadline: 400 15px/20px var(--font);
+  --footnote: 400 13px/18px var(--font);
+  --caption: 400 12px/16px var(--font);
+
+  /* Shape: capsules for controls, one group radius, inner radii derived from it */
+  --r-group: 22px;
+  --r-inner: calc(var(--r-group) - 14px); /* an element inset by the standard 16px */
+  --r-chat: 18px; /* bubbles and other blocks in a conversation */
+  --r-chat-inner: calc(var(--r-chat) - 12px);
+  --r-sheet: 38px;
+  --r-tile: 7px;
+  --capsule: 999px;
+
+  /* Layout */
+  --margin: 16px;
+  --gap: 20px;
+  --hairline: 0.5px;
+  --bar: 52px; /* height of the row of floating buttons at the top */
+  --tabbar: 62px;
+  --ticker: 34px; /* height of the band of running text */
+  --spring: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Motion: things arrive and leave on --ease-out; sheets and screens move on the steeper iOS curve. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --press: 0.1s; /* how fast a control gives under the finger; it springs back slower */
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  /* Floating bars sit a little into the home-indicator area, as the system ones do. */
+  --float-bottom: max(14px, calc(var(--safe-bottom) - 6px));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #130c07;
+    --bg-clear: rgba(19, 12, 7, 0);
+    --bg-veil: rgba(19, 12, 7, 0.66);
+    --bg-bar: rgba(19, 12, 7, 0.95);
+    --cell: #1e140d;
+    --label: #f7efe4;
+    --label-2: rgba(240, 222, 200, 0.64);
+    --label-3: rgba(240, 222, 200, 0.32);
+    --separator: rgba(226, 186, 144, 0.2);
+    --fill: rgba(226, 186, 144, 0.11);
+    --fill-2: rgba(226, 186, 144, 0.21);
+    --tint: #e2b887;
+    --green: #9fd08d;
+    --orange: #f0a85c;
+    --red: #f28672;
+    --gray: #7d7066;
+    --on-tint: #1d1108;
+    --tint-fill: #d7a874;
+    --tint-fill-2: #e8c397;
+    --frame: rgba(226, 186, 144, 0.18);
+    --rule: rgba(226, 184, 135, 0.34);
+    --iris-1: #a8713f;
+    --iris-2: #d7a874;
+    --iris-3: #f3dcbd;
+    --band: #dcae7b;
+    --on-band: #1d1108;
+    --band-mark: #6b3f20;
+    --knob: #fffaf2;
+    --dim: rgba(6, 3, 0, 0.6);
+
+    --glass-fill: rgba(84, 60, 40, 0.42);
+    --glass-fill-thick: rgba(38, 26, 17, 0.95);
+    --glass-fill-tint: rgba(215, 168, 116, 0.94);
+    --glass-solid: #2a1d13;
+    --glass-select: rgba(240, 214, 184, 0.16);
+    --glass-light:
+      inset 0 1px 0 0 rgba(255, 244, 228, 0.26), inset 0 0 0 0.5px rgba(255, 244, 228, 0.12),
+      inset 0 7px 9px -7px rgba(255, 244, 228, 0.15), inset 0 -9px 10px -9px rgba(0, 0, 0, 0.35);
+    --glass-light-tint:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6), inset 0 0 0 0.5px rgba(255, 255, 255, 0.25),
+      inset 0 7px 9px -7px rgba(255, 255, 255, 0.4), inset 0 -9px 10px -9px rgba(60, 30, 0, 0.3);
+    --glass-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.55);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Base                                                                       */
+/* ------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--label);
+  font: var(--body);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+pre {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: var(--tint);
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+button {
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+input,
+textarea {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+::placeholder {
+  color: var(--label-3);
+  opacity: 1;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--tint);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.form-error {
+  color: var(--red);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Glass: the only material, used only for floating controls                  */
+/* ------------------------------------------------------------------------- */
+
+.glass {
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: var(--glass-light), var(--glass-shadow);
+}
+
+/* The primary action: the same glass over the tint colour. */
+.glass-tint {
+  --glass-fill: var(--glass-fill-tint);
+  --glass-light: var(--glass-light-tint);
+  color: var(--on-tint);
+}
+
+/* Large surfaces hold text, so they carry more body. */
+.sheet,
+.menu {
+  --glass-fill: var(--glass-fill-thick);
+}
+
+/* Pressing glass: it gives slightly and catches more light. */
+a.glass,
+button.glass {
+  transition:
+    transform 0.3s var(--spring),
+    filter 0.3s var(--spring);
+}
+
+a.glass:active,
+button.glass:active:not(:disabled) {
+  transform: scale(0.96);
+  filter: brightness(1.1);
+  transition-duration: var(--press);
+}
+
+/* Links and labels that act as buttons: holding one must not select its text or offer to open it. */
+a.glass,
+.tab,
+.cell-link,
+.pill-button,
+.chip,
+.attach {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: var(--glass-solid);
+  }
+  .glass-tint {
+    background: var(--tint-fill);
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--glass-solid);
+  }
+  .glass-tint {
+    background: var(--tint-fill);
+  }
+}
+
+/* Round glass button: back, more, jump to latest. */
+.round-button {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--label);
+}
+
+.round-button:disabled {
+  color: var(--label-3);
+}
+
+/* Glass text button in the top bar: Cancel, Start. */
+.bar-button {
+  height: 44px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 17px;
+  border-radius: var(--capsule);
+  font: var(--button-label);
+  letter-spacing: var(--button-track);
+  text-transform: uppercase;
+  color: var(--label);
+  white-space: nowrap;
+}
+
+.bar-button.glass-tint {
+  color: var(--on-tint);
+}
+
+.bar-button.glass-tint:disabled {
+  --glass-fill: rgba(120, 120, 128, 0.2);
+  --glass-light: inset 0 0 0 0.5px rgba(120, 120, 128, 0.12);
+  color: var(--label-3);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Screen scaffolding                                                         */
+/* ------------------------------------------------------------------------- */
+
+.screen {
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.content {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: calc(var(--safe-top) + 20px) calc(var(--margin) + var(--safe-right)) 40px calc(var(--margin) + var(--safe-left));
+}
+
+/* Screens with the floating tab bar end above it. */
+.content-tabbed {
+  padding-bottom: calc(var(--tabbar) + var(--float-bottom) + 32px);
+}
+
+/* Screens with buttons in the top bar start below them. */
+.content-bar {
+  padding-top: calc(var(--safe-top) + var(--bar) + 16px);
+}
+
+.large-title {
+  font: var(--large-title);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+
+/*
+ * A small, spaced-out upper-case label: the voice for names of things, units, states and times.
+ * Never for a full sentence, and never for a path, where the case matters.
+ */
+.gauge-label,
+.lap-status,
+.task .cell-detail,
+.msg-note,
+.cell-sub,
+.step-label,
+.dock-pill {
+  font: var(--micro);
+  letter-spacing: var(--micro-track);
+  text-transform: uppercase;
+}
+
+/*
+ * The band of running text across the top of Tasks: what the laptop is doing, at a glance.
+ * Two copies of the same line sit side by side and slide left by one copy, so it never ends.
+ */
+.ticker {
+  overflow: hidden;
+  padding-top: var(--safe-top);
+  background: var(--band);
+  color: var(--on-band);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ticker-track {
+  width: max-content;
+  height: var(--ticker);
+  display: flex;
+  animation: ticker var(--ticker-time, 30s) linear infinite;
+}
+
+.ticker-line {
+  flex: none;
+  display: flex;
+  align-items: center;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  font: 800 12px/16px var(--font-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ticker-item svg {
+  margin: 0 9px;
+  color: var(--band-mark);
+}
+
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Below the band, the screen has already cleared the status bar. */
+.ticker + .content {
+  padding-top: 26px;
+}
+
+/* Top bar: no background of its own. Content fades out beneath it. */
+.topbar {
+  position: fixed;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: var(--safe-top);
+  pointer-events: none;
+}
+
+.topbar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -28px;
+  /* Blurs and dims what scrolls under the bar, so the light behind the screen still shows through. */
+  background: linear-gradient(to bottom, var(--bg-bar) 0%, var(--bg-bar) 50%, var(--bg-veil) 72%, var(--bg-clear) 100%);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 64%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 64%, transparent 100%);
+  transition: opacity 0.2s ease;
+}
+
+/* On a large-title screen nothing is under the bar until the page has scrolled. */
+.topbar-large:not(.is-scrolled)::before {
+  opacity: 0;
+}
+
+.topbar-row {
+  max-width: 640px;
+  margin: 0 auto;
+  height: var(--bar);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 calc(var(--margin) + var(--safe-right)) 0 calc(var(--margin) + var(--safe-left));
+}
+
+.topbar-side {
+  flex: 1 1 0;
+  min-width: 44px;
+  display: flex;
+}
+
+.topbar-side > * {
+  pointer-events: auto;
+}
+
+.topbar-end {
+  justify-content: flex-end;
+}
+
+.topbar-title {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: center;
+  transition: opacity 0.2s ease;
+}
+
+.topbar-title.is-hidden {
+  opacity: 0;
+}
+
+.topbar-name {
+  display: block;
+  font: var(--headline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-sub {
+  font: 500 11px/14px var(--font-mono);
+  color: var(--label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Tab bar: a glass capsule of tabs, and the new-task button beside it. */
+.tabbar {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 calc(20px + var(--safe-right)) var(--float-bottom) calc(20px + var(--safe-left));
+  pointer-events: none;
+}
+
+.tabbar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -28px -100vw 0;
+  background: linear-gradient(to top, var(--bg) 0%, var(--bg-veil) 45%, var(--bg-clear) 100%);
+}
+
+.tabs {
+  height: var(--tabbar);
+  display: flex;
+  padding: 4px;
+  border-radius: var(--capsule);
+  pointer-events: auto;
+}
+
+.tab {
+  width: 94px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: var(--capsule);
+  color: var(--label);
+  font: 500 11px/13px var(--font);
+  transition:
+    transform 0.3s var(--spring),
+    background-color 0.2s ease;
+}
+
+/* The tab you are on: a lighter patch of glass, and its picture in the accent colour. */
+.tab.is-current {
+  background: var(--glass-select);
+}
+
+.tab.is-current svg {
+  color: var(--tint);
+}
+
+.tab:active {
+  transform: scale(0.96);
+  transition-duration: var(--press);
+}
+
+.fab {
+  width: var(--tabbar);
+  height: var(--tabbar);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  pointer-events: auto;
+}
+
+.fab.glass-tint {
+  background: var(--tint-fill);
+  box-shadow:
+    var(--glass-light),
+    var(--glass-shadow),
+    0 8px 22px color-mix(in srgb, var(--tint-fill) 36%, transparent);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Grouped lists: the content surface                                         */
+/* ------------------------------------------------------------------------- */
+
+.group {
+  margin: 0 0 var(--gap);
+  background: var(--cell);
+  border-radius: var(--r-group);
+  box-shadow: inset 0 0 0 1px var(--frame);
+  overflow: hidden;
+}
+
+/* A section opens with a short rule, centred, and its name in heavy capitals. */
+.group-header {
+  margin: 34px 4px 12px;
+  font: var(--section);
+  text-transform: uppercase;
+}
+
+.group-header::before {
+  content: "";
+  display: block;
+  height: 1px;
+  margin: 0 44px 28px;
+  background: var(--rule);
+}
+
+.group-footer {
+  margin: -10px var(--margin) var(--gap);
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.cell {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: var(--margin);
+  color: var(--label);
+  text-align: left;
+}
+
+/* The separator belongs to the text column, so it starts where the text does. */
+.cell-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px var(--margin) 8px 0;
+  border-bottom: var(--hairline) solid var(--separator);
+}
+
+.group > :last-child > .cell-body,
+.group > li:last-child .cell-body {
+  border-bottom-color: transparent;
+}
+
+.cell-link {
+  transition: background-color 0.35s ease;
+  -webkit-touch-callout: none;
+}
+
+.cell-link:active:not(:disabled) {
+  background: var(--fill-2);
+  transition: none;
+}
+
+.cell-title {
+  flex: none;
+  font: var(--body);
+}
+
+.cell-title-clip {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-code {
+  font: 13px/18px var(--font-mono);
+}
+
+.cell-stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cell-sub {
+  margin-top: 2px;
+  color: var(--label-2);
+}
+
+.cell-detail {
+  margin-left: auto;
+  min-width: 0;
+  flex: 0 1 auto;
+  font: var(--body);
+  color: var(--label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-state-on {
+  color: var(--green);
+}
+
+.cell-state-silent {
+  color: var(--orange);
+}
+
+.cell-chevron {
+  flex: none;
+  color: var(--label-3);
+}
+
+.cell-check {
+  flex: none;
+  margin-left: auto;
+  color: var(--tint);
+}
+
+.cell-destructive .cell-body {
+  justify-content: center;
+  color: var(--red);
+}
+
+.cell-input {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--margin);
+  font: var(--body);
+}
+
+/* Coloured icon square, as in Settings. */
+.tile {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-tile);
+  color: #ffffff;
+}
+
+.tile-blue {
+  background: var(--tint-fill);
+  color: var(--on-tint);
+}
+
+.tile-red {
+  background: var(--red);
+}
+
+.tile-gray {
+  background: var(--gray);
+}
+
+/* Small grey capsule button inside content, like the App Store's. */
+.pill-button {
+  position: relative;
+  min-height: 34px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 0 15px;
+  border-radius: var(--capsule);
+  background: var(--fill);
+  color: var(--tint);
+  font: var(--button-label);
+  font-size: 12px;
+  letter-spacing: var(--button-track);
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+}
+
+.pill-button::after {
+  content: "";
+  position: absolute;
+  inset: -5px 0;
+}
+
+.pill-button:active:not(:disabled) {
+  opacity: 0.5;
+}
+
+.pill-button:disabled {
+  color: var(--label-3);
+}
+
+/* Full-width capsule button, used in sheets and on the sign-in screen. */
+.button {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border-radius: var(--capsule);
+  background: var(--fill-2);
+  color: var(--label);
+  font: var(--button-label);
+  letter-spacing: var(--button-track);
+  text-transform: uppercase;
+  transition:
+    transform 0.3s var(--spring),
+    opacity 0.2s ease;
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.75;
+  transition-duration: var(--press);
+}
+
+.button:disabled {
+  color: var(--label-3);
+}
+
+.button-tint {
+  background: var(--tint-fill);
+  color: var(--on-tint);
+}
+
+.button-tint:disabled {
+  background: var(--fill-2);
+}
+
+.button-destructive {
+  color: var(--red);
+}
+
+/* The iOS 26 switch: a wide track with a capsule knob. */
+.switch {
+  position: relative;
+  width: 60px;
+  height: 28px;
+  flex: none;
+  margin-left: auto;
+  border-radius: var(--capsule);
+  background: var(--fill-2);
+  cursor: pointer;
+  transition: background-color 0.25s ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 36px;
+  height: 24px;
+  border-radius: var(--capsule);
+  background: var(--knob);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.15),
+    0 1px 1px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s var(--spring);
+}
+
+.switch:checked {
+  background: var(--tint-fill);
+}
+
+.switch:checked::after {
+  transform: translateX(20px);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+}
+
+/* Status glyphs and indicators */
+.glyph-quiet {
+  color: var(--label-3);
+}
+
+.glyph-orange {
+  color: var(--orange);
+}
+
+.glyph-red {
+  color: var(--red);
+}
+
+.spinner {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid var(--fill-2);
+  border-top-color: var(--tint);
+  animation: spin 0.9s linear infinite;
+}
+
+.spinner-small {
+  width: 13px;
+  height: 13px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--gray);
+  vertical-align: 1px;
+}
+
+.status-silent {
+  background: var(--orange);
+}
+
+.status-on {
+  background: var(--green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 56px 24px;
+  text-align: center;
+  text-wrap: balance;
+  font: var(--subheadline);
+  color: var(--label-2);
+}
+
+.empty-title {
+  font: 800 20px/25px var(--font-display);
+  text-transform: uppercase;
+  color: var(--label);
+}
+
+.empty .pill-button {
+  margin: 12px 0 0;
+}
+
+/* Content that had to be fetched fades in where its placeholder was. */
+.is-arriving {
+  animation: fade-in 0.25s ease both;
+}
+
+.list-loading li {
+  height: 64px;
+  margin-left: 50px;
+  border-bottom: var(--hairline) solid var(--separator);
+}
+
+.list-loading li:last-child {
+  border-bottom: 0;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Home                                                                       */
+/* ------------------------------------------------------------------------- */
+
+.lap {
+  padding: var(--margin);
+}
+
+.lap-loading {
+  height: 72px;
+}
+
+.lap-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Concentric with the card: its radius minus the padding. */
+.lap .tile {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-inner);
+}
+
+.lap .tile svg {
+  width: 22px;
+  height: 22px;
+}
+
+.lap-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lap-text strong {
+  font: 800 20px/24px var(--font-display);
+  text-transform: uppercase;
+}
+
+/* Its state reads first, small and in the accent colour, with the name under it. */
+.lap-status {
+  order: -1;
+  margin-bottom: 3px;
+  color: var(--tint);
+}
+
+.lap-detail {
+  margin-top: 12px;
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.gauges {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  margin: var(--margin) calc(-1 * var(--margin)) 0 0;
+  padding: 18px var(--margin) 0 0;
+  border-top: var(--hairline) solid var(--separator);
+}
+
+.gauge {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.gauge-ring {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 8px;
+}
+
+.gauge-defs {
+  position: absolute;
+}
+
+.gauge-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.gauge-ring circle {
+  fill: none;
+  stroke-width: 6.5;
+}
+
+.gauge-track {
+  stroke: var(--fill-2);
+}
+
+.gauge-value {
+  stroke: currentColor;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.6s var(--spring);
+}
+
+.gauge-green .gauge-ring {
+  color: var(--green);
+}
+
+.gauge-blue .gauge-ring {
+  color: var(--tint);
+}
+
+/* Usage that is within bounds is drawn in the spectrum; warnings keep their plain colours. */
+.gauge-blue .gauge-value {
+  stroke: url(#gauge-iris);
+}
+
+.gauge-orange .gauge-ring {
+  color: var(--orange);
+}
+
+.gauge-red .gauge-ring {
+  color: var(--red);
+}
+
+.gauge-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  padding-top: 24px;
+  color: var(--label);
+  font: 800 20px/24px var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.gauge-number small {
+  margin-left: 1px;
+  font: 700 10px/12px var(--font-display);
+  color: var(--label-2);
+}
+
+/* The charging bolt interrupts the top of the ring, as on the Batteries widget. */
+.gauge-bolt {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 16px;
+  margin-left: -9px;
+  background: var(--cell);
+}
+
+.gauge-label {
+  margin-bottom: 3px;
+}
+
+/* A short sentence, so it is set as one. */
+.gauge-note {
+  min-height: 16px;
+  font: var(--caption);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--label-2);
+}
+
+.lap-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.lap-note svg {
+  flex: none;
+}
+
+.lap-note-warn {
+  color: var(--orange);
+}
+
+.lap-note + .lap-note {
+  margin-top: 4px;
+}
+
+/* A setting inside the laptop card: what it is, what it means right now, and its switch. */
+.lap-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: var(--margin);
+  padding-top: 14px;
+  border-top: var(--hairline) solid var(--separator);
+}
+
+.lap-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lap-row-text strong {
+  font: var(--body);
+}
+
+.lap-row-text span {
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.lap-stop {
+  position: relative;
+  display: block;
+  width: calc(100% + 2 * var(--margin));
+  min-height: 52px;
+  margin: var(--margin) calc(-1 * var(--margin)) calc(-1 * var(--margin));
+  color: var(--red);
+  font: var(--button-label);
+  letter-spacing: var(--button-track);
+  text-transform: uppercase;
+  transition: background-color 0.35s ease;
+}
+
+.lap-stop::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--margin);
+  right: 0;
+  height: var(--hairline);
+  background: var(--separator);
+}
+
+.lap-stop:active {
+  background: var(--fill-2);
+  transition: none;
+}
+
+.task .cell-body {
+  min-height: 66px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+
+.task-glyph {
+  width: 22px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.task-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-title,
+.task-sub {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-title {
+  font: var(--headline);
+}
+
+.task-sub {
+  font: var(--subheadline);
+  color: var(--label-2);
+}
+
+.task-step {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.task .cell-detail {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Chat                                                                       */
+/* ------------------------------------------------------------------------- */
+
+html.chat-open,
+html.chat-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Exactly as tall as the visible area, so the composer rides on top of the keyboard. */
+.chat {
+  --dock-height: 80px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-height, 100dvh);
+  transform: translateY(var(--app-offset, 0px));
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.chat .topbar {
+  position: absolute;
+}
+
+/* The chat runs the full height; the bar and the composer float over it. */
+.timeline {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: calc(var(--safe-top) + var(--bar) + 12px) 0 calc(var(--dock-height) + 12px);
+}
+
+.timeline-inner {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 calc(var(--margin) + var(--safe-right)) 0 calc(var(--margin) + var(--safe-left));
+}
+
+.earlier {
+  align-self: center;
+  margin: 0;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* What arrives while the chat is open eases in. Your own message rises from the composer. */
+.block.is-fresh {
+  animation: arrive 0.32s var(--ease-out) both;
+}
+
+.block.is-fresh:has(> .msg-user) {
+  transform-origin: 100% 100%;
+  animation-name: sent;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes sent {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.92);
+  }
+}
+
+.msg-user {
+  align-self: flex-end;
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bubble {
+  padding: 8px 14px;
+  border-radius: var(--r-chat);
+  background: var(--tint-fill);
+  color: var(--on-tint);
+  font: var(--body);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.msg-user.is-cancelled .bubble {
+  background: var(--fill-2);
+  color: var(--label-2);
+}
+
+.msg-note {
+  padding-right: 6px;
+  font-size: 9.5px;
+  color: var(--label-2);
+}
+
+.sent-images {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.sent-images li {
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+  border-radius: var(--r-chat);
+  background: var(--fill);
+}
+
+.sent-images img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sent-image-missing {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+/* Claude's words: plain text on the background, set for reading. */
+.prose {
+  font: 400 17px/24px var(--font);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.prose > * + * {
+  margin-top: 10px;
+}
+
+.prose h1,
+.prose h2 {
+  margin-top: 20px;
+  font: var(--title);
+}
+
+.prose h3,
+.prose h4 {
+  margin-top: 18px;
+  font: var(--headline);
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 24px;
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.prose li + li,
+.prose li > ul,
+.prose li > ol {
+  margin-top: 4px;
+}
+
+.prose li::marker {
+  color: var(--label-2);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-decoration-color: var(--label-3);
+  text-underline-offset: 3px;
+}
+
+.prose :not(pre) > code {
+  padding: 2px 5px;
+  border-radius: 6px;
+  background: var(--fill);
+  font-size: 15px;
+}
+
+.prose blockquote {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--fill-2);
+  color: var(--label-2);
+}
+
+.prose hr {
+  height: var(--hairline);
+  border: 0;
+  background: var(--separator);
+}
+
+.code-wrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+}
+
+.prose pre,
+.output {
+  overflow-x: auto;
+  font: 13px/19px var(--font-mono);
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose pre {
+  padding: 13px 14px;
+}
+
+.code-copy {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: var(--cell);
+  color: var(--label-2);
+}
+
+.code-copy:active {
+  opacity: 0.5;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+  -webkit-overflow-scrolling: touch;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--subheadline);
+}
+
+.prose th,
+.prose td {
+  padding: 11px 14px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: var(--hairline) solid var(--separator);
+}
+
+.prose th {
+  font-weight: 600;
+}
+
+.prose tr:last-child td {
+  border-bottom: 0;
+}
+
+/* What Claude did: one quiet line that opens into the steps. */
+.activity-head {
+  width: 100%;
+  min-height: 44px;
+  margin: -11px 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font: var(--subheadline);
+  color: var(--label-2);
+  text-align: left;
+}
+
+.activity-count {
+  flex: none;
+  font-weight: 600;
+}
+
+.activity-names {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-failed {
+  flex: none;
+  color: var(--red);
+}
+
+.disclosure {
+  flex: none;
+  color: var(--label-3);
+  transition: transform 0.25s var(--spring);
+}
+
+.activity.is-open > .activity-head .disclosure,
+.step.is-open > .step-head .disclosure {
+  transform: rotate(90deg);
+}
+
+.activity-head + .steps {
+  margin-top: 14px;
+}
+
+/* Opening a run of steps, or one step, lets its contents settle in rather than snap. */
+.activity.is-open > .activity-head + .steps,
+.step-body {
+  animation: unfold 0.24s var(--ease-out) both;
+}
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.steps {
+  overflow: hidden;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+}
+
+.step {
+  position: relative;
+}
+
+/* Starts where the step's name does, like every other separator. */
+.step + .step::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 36px;
+  right: 0;
+  height: var(--hairline);
+  background: var(--separator);
+}
+
+.step-head {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 0 12px;
+  text-align: left;
+  color: var(--label);
+}
+
+.step-mark {
+  width: 16px;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.step-name {
+  flex: none;
+  font: 600 15px/20px var(--font);
+}
+
+.step-summary {
+  flex: 1;
+  min-width: 0;
+  font: 13px/18px var(--font-mono);
+  color: var(--label-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.step-body {
+  padding: 0 12px 12px;
+}
+
+.step-label {
+  margin: 10px 2px 6px;
+  font-size: 9.5px;
+  color: var(--tint);
+}
+
+.output {
+  max-height: 260px;
+  padding: 10px 12px;
+  border-radius: var(--r-chat-inner);
+  background: var(--fill);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.output-error {
+  color: var(--red);
+}
+
+.step-empty {
+  font: var(--footnote);
+  color: var(--label-2);
+  padding: 0 2px;
+}
+
+.note {
+  padding: 0 24px;
+  text-align: center;
+  text-wrap: balance;
+  font: var(--footnote);
+  font-variant-numeric: tabular-nums;
+  color: var(--label-2);
+}
+
+.callout {
+  display: flex;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+  font: var(--subheadline);
+}
+
+.callout svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+.callout-error svg {
+  color: var(--red);
+}
+
+.callout-limit svg {
+  color: var(--orange);
+}
+
+.callout strong {
+  display: block;
+  font: var(--headline);
+}
+
+.callout p {
+  margin-top: 2px;
+  color: var(--label-2);
+}
+
+.callout-detail {
+  overflow-wrap: anywhere;
+}
+
+/* Pictures and files Claude sent. A picture shows at reading size and opens in full when tapped. */
+.files {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prose + .files {
+  margin-top: 10px;
+}
+
+.file-image {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+  box-shadow: inset 0 0 0 1px var(--frame);
+  -webkit-touch-callout: default;
+}
+
+.file-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  min-width: 96px;
+  min-height: 64px;
+  object-fit: contain;
+}
+
+.file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px 10px 12px;
+  border-radius: var(--r-chat);
+  background: var(--cell);
+  box-shadow: inset 0 0 0 1px var(--frame);
+  color: var(--label);
+  transition: background-color 0.35s ease;
+}
+
+.file:active {
+  background: var(--fill-2);
+  transition: none;
+}
+
+.file-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font: var(--headline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font: var(--micro);
+  letter-spacing: var(--micro-track);
+  text-transform: uppercase;
+  color: var(--label-2);
+}
+
+.file-get {
+  flex: none;
+  color: var(--tint);
+}
+
+/* The composer floats over the end of the chat. */
+.dock {
+  position: absolute;
+  z-index: 15;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px calc(12px + var(--safe-right)) var(--float-bottom) calc(12px + var(--safe-left));
+  pointer-events: none;
+}
+
+.dock::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -20px 0 0;
+  background: linear-gradient(to top, var(--bg) 0%, var(--bg-veil) 58%, var(--bg-clear) 100%);
+}
+
+.dock > * {
+  max-width: 616px;
+  margin-left: auto;
+  margin-right: auto;
+  pointer-events: auto;
+}
+
+/* With the keyboard up there is no home indicator to clear. */
+.keyboard-open .dock {
+  padding-bottom: 8px;
+}
+
+/* What Claude is doing, on its own small piece of glass so it stays readable over the chat. */
+.dock-row {
+  display: flex;
+  padding: 0 0 8px 2px;
+}
+
+.dock-pill {
+  min-height: 30px;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px;
+  border-radius: 15px;
+  color: var(--label-2);
+}
+
+/* An error is a sentence, so it is set as one. */
+.dock-pill-error {
+  font: var(--footnote);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--red);
+}
+
+/* Glass that appears mid-conversation materialises instead of popping in. */
+.dock .dock-pill,
+.dock .jump {
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s var(--ease-out),
+    filter 0.25s ease;
+}
+
+@starting-style {
+  .dock .dock-pill,
+  .dock .jump {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(4px);
+  }
+}
+
+.dock-pill {
+  transform-origin: 0 100%;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.dots i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dot 1.2s ease-in-out infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* One-tap answers to Claude's question, offered just above the message box. */
+.answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 8px 2px;
+}
+
+.answer {
+  min-height: 38px;
+  max-width: 100%;
+  padding: 8px 16px;
+  border-radius: 19px;
+  color: var(--tint);
+  font: 600 15px/20px var(--font);
+  text-align: left;
+}
+
+.answer:disabled {
+  color: var(--label-3);
+}
+
+@starting-style {
+  .answer {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.dock .answer {
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s var(--ease-out),
+    filter 0.3s var(--spring);
+}
+
+.composer {
+  min-height: 50px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 25px;
+}
+
+.composer-locked {
+  display: block;
+  padding: 14px 18px;
+  font: var(--subheadline);
+  color: var(--label-2);
+}
+
+.composer-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.composer textarea {
+  display: block;
+  width: 100%;
+  max-height: 168px;
+  padding: 9px 6px 9px 2px;
+  resize: none;
+  font: var(--body);
+}
+
+/* The attach control is a label around a real file input. */
+.attach {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--label-2);
+  cursor: pointer;
+}
+
+.attach input,
+.attach-row input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.attach:active {
+  opacity: 0.5;
+}
+
+.attach.is-disabled,
+.attach-row.is-disabled {
+  color: var(--label-3);
+  pointer-events: none;
+}
+
+/* Send, or Stop while Claude works: solid tint, since it already sits on glass. */
+.action-button {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tint-fill);
+  color: var(--on-tint);
+  transition:
+    transform 0.3s var(--spring),
+    background-color 0.2s ease;
+}
+
+.action-button:active:not(:disabled) {
+  transform: scale(0.92);
+  transition-duration: var(--press);
+}
+
+/* Send and Stop trade places in the same spot, so the new glyph grows in rather than cutting. */
+.action-button.is-swapped svg,
+.code-copy.is-copied svg {
+  animation: glyph-in 0.2s var(--ease-out) both;
+}
+
+@keyframes glyph-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+    filter: blur(2px);
+  }
+}
+
+.action-button:disabled {
+  background: var(--fill-2);
+  color: var(--label-3);
+}
+
+.jump {
+  position: absolute;
+  top: -42px;
+  right: calc(var(--margin) + var(--safe-right));
+  margin: 0;
+}
+
+.previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 6px 4px 2px;
+}
+
+.preview {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-inner);
+  background: var(--fill);
+}
+
+.preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--gray);
+  color: #ffffff;
+}
+
+.preview-remove::after {
+  content: "";
+  position: absolute;
+  inset: -11px;
+}
+
+.preview-reading {
+  display: grid;
+  place-items: center;
+}
+
+.preview-reading::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid var(--fill-2);
+  border-top-color: var(--tint);
+  animation: spin 0.9s linear infinite;
+}
+
+/* ------------------------------------------------------------------------- */
+/* New task                                                                   */
+/* ------------------------------------------------------------------------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -8px 0 var(--gap);
+}
+
+.chip {
+  min-height: 34px;
+  max-width: 100%;
+  padding: 0 14px;
+  border-radius: var(--capsule);
+  background: var(--fill-2);
+  color: var(--label);
+  font: var(--subheadline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s ease;
+}
+
+.chip.is-on {
+  background: var(--tint-fill);
+  color: var(--on-tint);
+}
+
+.task-input {
+  min-height: 154px;
+  padding: 15px var(--margin);
+  resize: none;
+}
+
+.task-group .previews {
+  padding: 0 var(--margin) 14px;
+}
+
+.attach-row {
+  position: relative;
+  gap: 10px;
+  color: var(--tint);
+  cursor: pointer;
+}
+
+.attach-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--margin);
+  right: 0;
+  height: var(--hairline);
+  background: var(--separator);
+}
+
+.picker {
+  max-height: 46vh;
+  margin-bottom: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Sheets and menus                                                           */
+/* ------------------------------------------------------------------------- */
+
+.sheet-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: calc(var(--safe-top) + 24px) 8px 8px;
+}
+
+/* A closing sheet is already out of the way: taps go to the screen behind it. */
+.sheet-backdrop.is-closing,
+.menu-backdrop.is-closing {
+  pointer-events: none;
+}
+
+/* Its own layer, so a drag can fade it in step with the sheet. */
+.sheet-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--dim);
+  transition: opacity 0.3s ease;
+}
+
+/*
+ * Floats clear of the screen edges, with corners concentric to the display's.
+ * It arrives and leaves along the same path, on transitions rather than keyframes, so a drag
+ * can take over at any point and hand the motion back.
+ */
+.sheet {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px var(--margin) max(var(--margin), calc(var(--safe-bottom) - 4px));
+  border-radius: var(--r-sheet);
+  transition: transform 0.45s var(--ease-sheet);
+}
+
+@starting-style {
+  .sheet-dim {
+    opacity: 0;
+  }
+  .sheet {
+    transform: translateY(calc(100% + 24px));
+  }
+}
+
+.is-closing > .sheet-dim {
+  opacity: 0;
+}
+
+.is-closing > .sheet {
+  transform: translateY(calc(100% + 24px));
+  transition-duration: 0.3s;
+}
+
+/* The list in a sheet scrolls on its own; everywhere else a drag moves the sheet. */
+.sheet .picker {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.keyboard-open .sheet {
+  padding-bottom: var(--margin);
+}
+
+.sheet-grabber {
+  width: 36px;
+  height: 5px;
+  margin: 0 auto 14px;
+  border-radius: var(--capsule);
+  background: var(--label-3);
+}
+
+.sheet-title,
+.sheet-text {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.sheet-title {
+  margin: 0 12px 8px;
+  text-align: center;
+  text-wrap: balance;
+  font: 800 17px/22px var(--font-display);
+  text-transform: uppercase;
+}
+
+.sheet-text {
+  margin: 0 12px 18px;
+  text-align: center;
+  text-wrap: balance;
+  font: var(--subheadline);
+  color: var(--label-2);
+}
+
+.sheet-text.form-error {
+  color: var(--red);
+}
+
+.sheet-title + .group,
+.sheet-title + .sheet-form {
+  margin-top: 12px;
+}
+
+/* The name of a group of choices inside a sheet. */
+.sheet-label {
+  margin: 14px 4px 8px;
+  font: var(--micro);
+  letter-spacing: var(--micro-track);
+  text-transform: uppercase;
+  color: var(--tint);
+}
+
+.sheet .chips {
+  margin: 0;
+}
+
+.sheet-note {
+  margin: 16px 4px 18px;
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.menu-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-stack small {
+  font: var(--footnote);
+  color: var(--label-2);
+}
+
+.sheet-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sheet .group {
+  margin-bottom: var(--margin);
+}
+
+.sheet .picker {
+  margin-bottom: 0;
+}
+
+.menu-backdrop {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+}
+
+.menu {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--bar) + 4px);
+  right: calc(var(--margin) + var(--safe-right));
+  min-width: 232px;
+  overflow: hidden;
+  border-radius: var(--r-group);
+  transform-origin: calc(100% - 22px) 0;
+  transition:
+    transform 0.3s var(--spring),
+    opacity 0.2s ease;
+}
+
+/* Grows out of the button that opened it, and goes back into it. */
+@starting-style {
+  .menu {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+}
+
+.is-closing > .menu {
+  transform: scale(0.5);
+  opacity: 0;
+  transition-duration: 0.2s, 0.15s;
+}
+
+.menu-item {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 6px 18px;
+  font: var(--body);
+  color: var(--label);
+  text-align: left;
+}
+
+.menu-item + .menu-item {
+  border-top: var(--hairline) solid var(--separator);
+}
+
+.menu-item:active {
+  background: var(--fill-2);
+}
+
+.menu-item-destructive {
+  color: var(--red);
+}
+
+
+/* ------------------------------------------------------------------------- */
+/* Sign in and the other full-screen states                                   */
+/* ------------------------------------------------------------------------- */
+
+.center-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--safe-top) + 24px) calc(var(--margin) + var(--safe-right)) calc(var(--safe-bottom) + 24px)
+    calc(var(--margin) + var(--safe-left));
+}
+
+.login {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.login-title {
+  margin-top: 22px;
+  font: 900 28px/32px var(--font-display);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.login-sub {
+  margin-top: 4px;
+  color: var(--label-2);
+}
+
+.login-fields {
+  width: 100%;
+  margin: 32px 0 var(--gap);
+  text-align: left;
+}
+
+.login .group-footer {
+  align-self: stretch;
+  text-align: left;
+}
+
+.field-label {
+  width: 92px;
+}
+
+.field-input {
+  flex: 1;
+  min-width: 0;
+  font: var(--body);
+}
+
+.login-button {
+  margin-top: 4px;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Moving between screens                                                     */
+/* ------------------------------------------------------------------------- */
+
+/*
+ * Each screen is a view transition of its own (see Screen in components/Chrome.tsx), and the
+ * link that was tapped says which move this is:
+ *   push / pop         into a chat and back out: the chat covers the list from the right
+ *   present / dismiss  New Task rises over the list and drops away again
+ *   tab                Tasks and Settings trade places with a short fade
+ * The screen underneath shifts a little and dims, as it does on iOS, so it reads as one level back.
+ */
+
+/* Taps during a move still reach the screen. */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.push-in),
+::view-transition-group(.pop-out),
+::view-transition-group(.present-in),
+::view-transition-group(.dismiss-out) {
+  z-index: 1;
+}
+
+::view-transition-new(.push-in) {
+  animation: 0.48s var(--ease-sheet) both from-right;
+}
+
+::view-transition-old(.push-out) {
+  animation: 0.48s var(--ease-sheet) both to-behind;
+}
+
+::view-transition-old(.pop-out) {
+  animation: 0.42s var(--ease-sheet) both to-right;
+}
+
+::view-transition-new(.pop-in) {
+  animation: 0.42s var(--ease-sheet) both from-behind;
+}
+
+::view-transition-new(.present-in) {
+  animation: 0.5s var(--ease-sheet) both from-below;
+}
+
+::view-transition-old(.present-out) {
+  animation: 0.5s var(--ease-sheet) both to-under;
+}
+
+::view-transition-old(.dismiss-out) {
+  animation: 0.4s var(--ease-sheet) both to-below;
+}
+
+::view-transition-new(.dismiss-in) {
+  animation: 0.4s var(--ease-sheet) both from-under;
+}
+
+/* The new tab fades in over the old one, which holds still, so the bar they share never flickers. */
+::view-transition-group(.tab-in) {
+  z-index: 1;
+}
+
+::view-transition-old(.tab-out) {
+  animation: 0.16s linear both hold;
+}
+
+::view-transition-new(.tab-in) {
+  animation: 0.16s ease both fade-in;
+}
+
+@keyframes from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes to-right {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes to-behind {
+  to {
+    transform: translateX(-28%);
+    opacity: 0.45;
+  }
+}
+
+@keyframes from-behind {
+  from {
+    transform: translateX(-28%);
+    opacity: 0.45;
+  }
+}
+
+@keyframes from-below {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes to-below {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes to-under {
+  to {
+    transform: scale(0.94);
+    opacity: 0.45;
+  }
+}
+
+@keyframes from-under {
+  from {
+    transform: scale(0.94);
+    opacity: 0.45;
+  }
+}
+
+@keyframes hold {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Motion preferences                                                         */
+/* ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .spinner,
+  .preview-reading::after {
+    border-top-color: var(--fill-2);
+    border-right-color: var(--tint);
+  }
+
+  /* Screens trade places with a short fade instead of sliding. */
+  ::view-transition-old(*) {
+    animation: 0.15s ease both fade-out !important;
+  }
+
+  ::view-transition-new(*) {
+    animation: 0.15s ease both fade-in !important;
+  }
+}
