@@ -216,10 +216,23 @@ export async function startDaemon(deps = {}) {
   }
 
   async function startJob(ev) {
-    const { data: conv } = await db.from('conversations').select('*').eq('id', ev.conversation_id).maybeSingle();
+    // The secret key skips the database's access rules, so check ownership here as well:
+    // nothing but the owner's own chats ever runs, even if a second account somehow appeared.
+    const { data: conv } = await db
+      .from('conversations')
+      .select('*')
+      .eq('id', ev.conversation_id)
+      .eq('user_id', config.ownerId)
+      .maybeSingle();
     if (!conv || conv.stop_requested) return;
 
-    const claim = await db.from('events').update({ state: 'running' }).eq('id', ev.id).eq('state', 'pending').select('id, body');
+    const claim = await db
+      .from('events')
+      .update({ state: 'running' })
+      .eq('id', ev.id)
+      .eq('state', 'pending')
+      .eq('user_id', config.ownerId)
+      .select('id, body');
     if (!claim.data?.length) return;
     const body = claim.data[0].body ?? {};
 
@@ -360,7 +373,11 @@ export async function startDaemon(deps = {}) {
   }
 
   async function handleStops() {
-    const { data } = await db.from('conversations').select('id, device_id').eq('stop_requested', true);
+    const { data } = await db
+      .from('conversations')
+      .select('id, device_id')
+      .eq('stop_requested', true)
+      .eq('user_id', config.ownerId);
     for (const conv of data ?? []) {
       const job = jobs.get(conv.id);
       if (job) {
@@ -385,6 +402,7 @@ export async function startDaemon(deps = {}) {
       .select('id, conversation_id')
       .eq('kind', 'user')
       .eq('state', 'pending')
+      .eq('user_id', config.ownerId)
       .order('id', { ascending: true })
       .limit(50);
     if (error) throw new Error(error.message);

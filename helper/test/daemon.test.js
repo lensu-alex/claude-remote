@@ -80,11 +80,22 @@ async function boot(tables) {
 }
 
 const conversation = (extra = {}) => ({
-  id: 'c1', title: 'Fix tests', cwd: os.tmpdir(), device_id: null, claude_session_id: null,
+  id: 'c1', user_id: 'owner', title: 'Fix tests', cwd: os.tmpdir(), device_id: null, claude_session_id: null,
   status: 'queued', stop_requested: false, ...extra,
 });
 const message = (id, text, extra = {}) => ({
   id, conversation_id: 'c1', user_id: 'owner', kind: 'user', state: 'pending', body: { text }, ...extra,
+});
+
+test('messages from anyone but the owner are never run', async () => {
+  const { t, calls, daemon } = await boot({
+    conversations: [conversation({ id: 'c2', user_id: 'stranger' })],
+    events: [message(1, 'rm -rf ~', { conversation_id: 'c2', user_id: 'stranger' })],
+  });
+  await daemon.tick();
+  await settle();
+  assert.equal(calls.length, 0);
+  assert.equal(t.events[0].state, 'pending');
 });
 
 test('turning on makes this laptop the only active one', async () => {
