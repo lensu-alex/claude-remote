@@ -48,7 +48,7 @@ Leave the laptop plugged in with the lid open. A MacBook sleeps when the lid clo
 - **Model and effort.** A new task, or any chat from its menu, can pick the model and how hard Claude thinks. "Default" is whatever Claude Code on the laptop is set to.
 - **Files from Claude.** Claude can send pictures and files into the chat (screenshots, documents). They are kept in the project's private storage for 90 days (`keepFilesDays`, 0 keeps them).
 - **One-tap answers.** When Claude ends with a question that has a few obvious answers, they appear as buttons above the message box.
-- **Staying awake.** The laptop card has a Stay awake switch. On, the helper keeps the laptop from sleeping on its own. Off, the laptop sleeps when it normally would, and then takes no tasks until someone wakes it. On battery below 10% it is let sleep whatever the switch says.
+- **Staying awake.** The laptop card has a Stay awake switch. On, the helper keeps the laptop from sleeping on its own. Off, the laptop sleeps when it normally would, and then takes no tasks until someone wakes it. On battery below 10% it is let sleep whatever the switch says. On a Mac, closing the lid still sleeps it until you run `helper/setup-lid.sh` once (asks for your password); after that, Stay awake also covers a closed lid, on battery too.
 - **Storage.** Command output older than 30 days is cleared from the database so the free tier does not fill up; the conversation text stays. Change `keepOutputDays` in `~/.config/claude-remote/config.json` (0 keeps everything).
 - **Free tier.** Supabase pauses a free project after about a week with no activity. A laptop that is on counts as activity. If every laptop was off for a week, un-pause the project in the Supabase dashboard.
 

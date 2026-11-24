@@ -1,6 +1,6 @@
 // Keeping the laptop awake, and deciding when it should be.
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 
 /** Below this, on battery, the laptop is let go to sleep whatever the owner chose. */
 export const SLEEP_BELOW = 10;
@@ -16,12 +16,28 @@ export function batteryTooLow(health, wasLow = false) {
   return health.battery < (wasLow ? AWAKE_AGAIN_AT : SLEEP_BELOW);
 }
 
+/**
+ * Turns the Mac's sleep off or back on as a whole, which is the only thing that keeps it awake
+ * with the lid closed on battery. Needs the sudoers rule from `setup-lid.sh`; false without it.
+ */
+function lidSleep(off) {
+  const run = spawnSync('sudo', ['-n', '/usr/bin/pmset', '-a', 'disablesleep', off ? '1' : '0'], { stdio: 'ignore' });
+  return run.status === 0;
+}
+
 function start(log) {
   const quiet = { stdio: 'ignore' };
   if (process.platform === 'darwin') {
     const child = spawn('caffeinate', ['-i', '-s', '-w', String(process.pid)], quiet);
     child.on('error', () => log('could not start caffeinate; the laptop may sleep'));
-    return child;
+    const lid = lidSleep(true);
+    if (!lid) log('closing the lid will still sleep the laptop; run setup-lid.sh once to change that');
+    return {
+      kill() {
+        child.kill();
+        if (lid) lidSleep(false);
+      },
+    };
   }
   if (process.platform === 'linux') {
     // `tail --pid` ends on its own when the helper exits, which releases the lock.
@@ -53,7 +69,7 @@ function start(log) {
 }
 
 /**
- * Stops the laptop from sleeping for as long as it is held. Closing the lid can still sleep a Mac.
+ * Stops the laptop from sleeping for as long as it is held, lid closed included once setup-lid.sh has run.
  * Releasing it hands sleep back to the system's own settings.
  */
 export function createWakeLock(log = () => {}) {
