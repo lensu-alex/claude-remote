@@ -188,7 +188,7 @@ async function on() {
     await sleep(500);
     if (runningPid() === child.pid && /\bon: /.test(tailLog(5))) {
       console.log('On. This laptop is now the active one. It stays awake while this is running, unless Stay awake is off in the app.');
-      console.log('Keep the lid open and the charger connected. Turn off with: remote off');
+      console.log('The lid can be closed once setup-lid.sh has run. Turn off with: remote off');
       return;
     }
     try {
